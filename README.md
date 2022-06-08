@@ -1,0 +1,1 @@
+# wallarm-sidecar-proxy-image
