@@ -26,7 +26,6 @@ http {
         #TODO Do we need NGINX_IPV6_ENABLE here?
         listen [::]:{{ env.Getenv "NGINX_LISTEN_PORT" }} default_server ipv6only=on;
         server_name localhost;
-        root /usr/share/nginx/html;
         index index.html index.htm;
         {{- tmpl.Exec "serverInclude" | indent 8 }}
 
