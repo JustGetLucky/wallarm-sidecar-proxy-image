@@ -85,14 +85,22 @@ http {
     }
 
     upstream wallarm_tarantool {
-        server {{ env.Getenv "WALLARM_TARANTOOL_HOST" }}:{{ env.Getenv "WALLARM_TARANTOOL_PORT" "3313" }};
-        keepalive 1;
+{{- tmpl.Exec "tarantoolUpstream" | indent 8 }}
     }
 
     wallarm_tarantool_upstream wallarm_tarantool;
     wallarm_upstream_connect_attempts {{ env.Getenv "WALLARM_UPSTREAM_CONNECT_ATTEMPTS" "10" }};
     wallarm_upstream_reconnect_interval {{ env.Getenv "WALLARM_UPSTREAM_RECONNECT_INTERVAL" "15s" | strings.Quote }};
 }
+
+{{- define "tarantoolUpstream" -}}
+    {{- $port := env.Getenv "WALLARM_TARANTOOL_PORT" "3313" -}}
+    {{- $ip_list :=  env.Getenv "WALLARM_TARANTOOL_HOST" | net.LookupIPs -}}
+    {{ range $ip :=  $ip_list }}
+server {{ $ip }}:{{ $port }};
+    {{- end }}
+keepalive {{ len $ip_list }};
+{{- end -}}
 
 {{- define "extraModules" -}}
     {{ $extra_modules := env.Getenv "NGINX_EXTRA_MODULES" }}

@@ -3,7 +3,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-gomplate -f "/etc/nginx/nginx.tmpl" -o "/etc/nginx/nginx.conf"
+gomplate -f "/etc/nginx/nginx.tmpl" -o "/etc/nginx/nginx.conf" --verbose
 
 ln -sf /dev/stdout /var/log/nginx/access.log
 ln -sf /dev/stderr /var/log/nginx/error.log
