@@ -5,7 +5,7 @@ FROM wallarm/ingress-ruby:${UPSTREAM_TAG} as ruby
 FROM wallarm/ingress-nginx:${UPSTREAM_TAG}
 
 COPY --chown=www-data:www-data conf/nginx.tmpl /etc/nginx/nginx.tmpl
-COPY --chown=www-data:www-data conf/crontab /etc/supercronic/crontab
+COPY --chown=www-data:www-data conf/crontab.tmpl /etc/supercronic/crontab.tmpl
 COPY --chown=www-data:www-data conf/supervisord.node.conf /etc/supervisor/supervisord.node.conf
 COPY --chown=www-data:www-data conf/supervisord.helper.conf /etc/supervisor/supervisord.helper.conf
 COPY  scripts /usr/local
@@ -23,7 +23,7 @@ COPY --from=ruby /bin/supercronic /usr/bin/supercronic
 ENV GEM_PATH="/opt/wallarm/ruby/var/lib/gems/2.7.0:/opt/wallarm/ruby/usr/local/lib/ruby/gems/2.7.0:/opt/wallarm/ruby/usr/lib/ruby/gems/2.7.0:/opt/wallarm/ruby/usr/lib/x86_64-linux-gnu/ruby/gems/2.7.0:/opt/wallarm/ruby/usr/share/rubygems-integration/2.7.0:/opt/wallarm/ruby/usr/share/rubygems-integration/all:/opt/wallarm/ruby/usr/lib/x86_64-linux-gnu/rubygems-integration/2.7.0" \
     RUBYLIB="/opt/wallarm/ruby/usr/local/lib/site_ruby/2.7.0:/opt/wallarm/ruby/usr/local/lib/x86_64-linux-gnu/site_ruby:/opt/wallarm/ruby/usr/local/lib/site_ruby:/opt/wallarm/ruby/usr/lib/ruby/vendor_ruby/2.7.0:/opt/wallarm/ruby/usr/lib/x86_64-linux-gnu/ruby/vendor_ruby/2.7.0:/opt/wallarm/ruby/usr/lib/ruby/vendor_ruby:/opt/wallarm/ruby/usr/lib/ruby/2.7.0:/opt/wallarm/ruby/usr/lib/x86_64-linux-gnu/ruby/2.7.0"
 
-RUN chmod +x /usr/local/run-nginx.sh /usr/local/run-addnode.sh /usr/local/run-node.sh \
+RUN chmod +x /usr/local/run-*.sh \
   && apk update \
   && apk upgrade \
   && apk add --no-cache upx libcap tar iptables \
@@ -35,7 +35,7 @@ RUN chmod +x /usr/local/run-nginx.sh /usr/local/run-addnode.sh /usr/local/run-no
   && curl -sL https://github.com/ochinchina/supervisord/releases/download/v0.7.3/supervisord_0.7.3_Linux_64-bit.tar.gz -o /tmp/supervisord.tar.gz \
   && tar -xf /tmp/supervisord.tar.gz -C /usr/bin --wildcards --no-anchored 'supervisord' --strip-components 1 && rm /tmp/supervisord.tar.gz \
   && chmod 555 /usr/bin/supervisord && chown root:root /usr/bin/supervisord \
-  && apk del libcap tar upx curl \
+  && apk del libcap tar upx \
   && rm -rf /var/cache/apk/* \
   && mkdir /var/log/wallarm \
   && chown www-data:www-data /var/log/wallarm
