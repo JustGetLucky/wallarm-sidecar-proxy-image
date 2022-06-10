@@ -1,19 +1,15 @@
 UPSTREAM_TAG=4.0.3-1
 BUILD_IMAGE=quay.io/dmitriev/sidecar-proxy:$(UPSTREAM_TAG)
 
-BUILDARGS :=
-BUILDARGS += --build-arg UPSTREAM_TAG=$(UPSTREAM_TAG)
-
-MINIKUBE_IP := $(shell minikube ip)
-LOCAL_IMAGE = $(MINIKUBE_IP):5000/sidecar-proxy:$(UPSTREAM_TAG)
+BUILDARGS := --build-arg UPSTREAM_TAG=$(UPSTREAM_TAG)
 
 all_local: build push_local rmi
 .PHONY: all_local
 
 build_minikube:
 	@eval $$(minikube docker-env) ;\
-	docker build $(BUILDARGS) -t $(BUILD_IMAGE) -f Dockerfile . --force-rm --no-cache --progress=plain
-	docker rmi $$(docker images -f dangling=true -q)
+	docker build $(BUILDARGS) -t $(BUILD_IMAGE) -f Dockerfile . --force-rm --pull --no-cache --progress=plain ;\
+	docker rmi $$(docker images -f dangling=true -q) || true
 .PHONY: build_minikube
 
 all: build push rmi
@@ -27,13 +23,7 @@ build: ## Build docker image.
 push: ## Push docker image to remote registry
 	@docker push $(BUILD_IMAGE)
 
-.PHONY: push_local
-push_local: ## Push docker image to local registry
-	@docker rmi $(LOCAL_IMAGE) || true
-	@docker tag $(BUILD_IMAGE) $(LOCAL_IMAGE)
-	@docker push $(LOCAL_IMAGE)
-
 .PHONY: rmi
 rmi: ## Remove local docker image
 	@docker rmi $(BUILD_IMAGE) || true
-	@docker rmi $(LOCAL_IMAGE) || true
+	docker rmi $$(docker images -f dangling=true -q) || true
