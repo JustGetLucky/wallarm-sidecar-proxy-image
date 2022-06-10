@@ -3,9 +3,6 @@ BUILD_IMAGE=quay.io/dmitriev/sidecar-proxy:$(UPSTREAM_TAG)
 
 BUILDARGS := --build-arg UPSTREAM_TAG=$(UPSTREAM_TAG)
 
-all_local: build push_local rmi
-.PHONY: all_local
-
 build_minikube:
 	@eval $$(minikube docker-env) ;\
 	docker build $(BUILDARGS) -t $(BUILD_IMAGE) -f Dockerfile . --force-rm --pull --no-cache --progress=plain ;\
