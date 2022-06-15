@@ -29,6 +29,7 @@ http {
         {{ if (env.Getenv "WALLARM_APPLICATION") -}}
         wallarm_application {{ env.Getenv "WALLARM_APPLICATION" }};
         {{- end }}
+        wallarm_acl_access_phase {{ env.Getenv "WALLARM_ACL_ACCESS_PHASE" }};
         wallarm_mode {{ env.Getenv "WALLARM_MODE" }};
         wallarm_mode_allow_override {{ env.Getenv "WALLARM_MODE_ALLOW_OVERRIDE" | strings.ToLower }};
         wallarm_parse_response {{ env.Getenv "WALLARM_PARSE_RESPONSE" | strings.ToLower }};

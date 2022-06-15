@@ -14,7 +14,7 @@ all: build push rmi
 
 .PHONY: build
 build: ## Build docker image.
-	@docker build $(BUILDARGS) -t $(BUILD_IMAGE) . --pull --progress=plain --no-cache
+	@docker build $(BUILDARGS) -t $(BUILD_IMAGE) . --pull --no-cache --progress=plain
 
 .PHONY: push
 push: ## Push docker image to remote registry
