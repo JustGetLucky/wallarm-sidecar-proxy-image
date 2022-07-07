@@ -1,0 +1,142 @@
+worker_processes auto;
+pid /tmp/nginx.pid;
+
+load_module /etc/nginx/modules/ngx_http_wallarm_module.so;
+{{- tmpl.Exec "extraModules" }}
+
+events {
+    worker_connections 4096;
+}
+
+http {
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+    include /etc/nginx/mime.types;
+    {{- tmpl.Exec "httpInclude" | indent 4 }}
+
+    default_type application/octet-stream;
+
+    sendfile on;
+    keepalive_timeout 65;
+
+    server {
+        listen {{ env.Getenv "NGINX_LISTEN_PORT" }} default_server;
+        listen [::]:{{ env.Getenv "NGINX_LISTEN_PORT" }} default_server ipv6only=on;
+        server_name localhost;
+        index index.html index.htm;
+        {{- tmpl.Exec "serverInclude" | indent 8 }}
+
+        {{ if (env.Getenv "WALLARM_APPLICATION") -}}
+        wallarm_application {{ env.Getenv "WALLARM_APPLICATION" }};
+        {{- end }}
+
+        wallarm_mode {{ env.Getenv "WALLARM_MODE" }};
+        wallarm_mode_allow_override {{ env.Getenv "WALLARM_MODE_ALLOW_OVERRIDE" | strings.ToLower }};
+        wallarm_parse_response {{ env.Getenv "WALLARM_PARSE_RESPONSE" | strings.ToLower }};
+        wallarm_parse_websocket {{ env.Getenv "WALLARM_PARSE_WEBSOCKET" | strings.ToLower }};
+        wallarm_unpack_response {{ env.Getenv "WALLARM_UNPACK_RESPONSE" | strings.ToLower }};
+
+        location / {
+            proxy_pass http://127.0.0.1:{{ env.Getenv "NGINX_PROXY_PASS_PORT" }};
+            {{ tmpl.Exec "proxyParams" | indent 12 }}
+            {{- tmpl.Exec "locationInclude" | indent 12 }}
+        }
+    }
+
+    # Wallarm metrics endpoint
+    server {
+        listen {{ env.Getenv "NGINX_WALLARM_METRICS_PORT" }};
+
+        access_log off;
+        gzip off;
+        keepalive_timeout 0;
+
+        location {{ env.Getenv "NGINX_WALLARM_METRICS_PATH" "~ ^/(wallarm-metrics|metrics)" }} {
+            disable_acl "on";
+            wallarm_mode off;
+            wallarm_status on format=prometheus;
+        }
+    }
+
+    # Wallarm status, Nginx stats and health check endpoint
+    server {
+        listen {{ env.Getenv "NGINX_STATUS_PORT" }};
+
+        access_log off;
+        gzip off;
+        keepalive_timeout 0;
+
+        location {{ env.Getenv "NGINX_HEALTH_PATH" }} {
+            add_header 'Content-Type' 'text/plain';
+            return 200 "OK";
+        }
+
+        location {{ env.Getenv "NGINX_STATUS_PATH" }} {
+            stub_status on;
+        }
+
+        location {{ env.Getenv "NGINX_WALLARM_STATUS_PATH" }} {
+            disable_acl "on";
+            wallarm_status on format=json;
+        }
+    }
+
+    upstream wallarm_tarantool {
+{{ tmpl.Exec "tarantoolUpstream" | indent 8 }}
+    }
+
+    wallarm_tarantool_upstream wallarm_tarantool;
+    wallarm_upstream_connect_attempts {{ env.Getenv "WALLARM_UPSTREAM_CONNECT_ATTEMPTS" "10" }};
+    wallarm_upstream_reconnect_interval {{ env.Getenv "WALLARM_UPSTREAM_RECONNECT_INTERVAL" "15s" | strings.Quote }};
+}
+
+{{- define "tarantoolUpstream" -}}
+    {{- $port := env.Getenv "WALLARM_TARANTOOL_PORT" "3313" -}}
+    {{- $ip_list :=  env.Getenv "WALLARM_TARANTOOL_HOST" | net.LookupIPs -}}
+    {{ range $ip :=  $ip_list }}
+server {{ $ip }}:{{ $port }};
+    {{- end }}
+keepalive {{ len $ip_list }};
+{{- end -}}
+
+{{- define "extraModules" -}}
+    {{ $extra_modules := env.Getenv "NGINX_EXTRA_MODULES" }}
+    {{- if $extra_modules -}}
+        {{ range $file := $extra_modules | jsonArray }}
+load_module /etc/nginx/modules/{{ $file }};
+        {{- end }}
+    {{- end -}}
+{{- end -}}
+
+{{- define "httpInclude" -}}
+    {{ $http_include := env.Getenv "NGINX_HTTP_INCLUDE" }}
+    {{- if $http_include -}}
+        {{ range $file := $http_include | jsonArray }}
+include {{ $file }};
+        {{- end }}
+    {{- end -}}
+{{- end -}}
+
+{{- define "serverInclude" -}}
+    {{ $server_include := env.Getenv "NGINX_SERVER_INCLUDE" }}
+    {{- if $server_include -}}
+        {{ range $file := $server_include | jsonArray }}
+include {{ $file }};
+        {{- end }}
+    {{- end -}}
+{{- end -}}
+
+{{- define "locationInclude" -}}
+    {{ $location_include := env.Getenv "NGINX_LOCATION_INCLUDE" }}
+    {{- if $location_include -}}
+        {{ range $file := $location_include | jsonArray }}
+include {{ $file }};
+        {{- end }}
+    {{- end -}}
+{{- end -}}
+
+{{ define "proxyParams" }}
+proxy_set_header Host $http_host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+{{ end }}

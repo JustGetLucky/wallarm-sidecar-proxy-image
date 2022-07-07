@@ -1,1 +1,1 @@
-# wallarm-sidecar-proxy-image
+Docker image for Wallarm sidecar proxy
