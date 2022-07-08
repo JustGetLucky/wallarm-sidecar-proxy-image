@@ -1,8 +1,8 @@
 # export-environment
-{{ env.Getenv "WALLARM_CRON_EXPORT_ENV_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_EXPORT_ENV_TIMEOUT" }} /opt/wallarm/ruby/usr/share/wallarm-common/export-environment -l STDOUT
+{{ env.Getenv "WALLARM_CRON_EXPORT_ENV_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_EXPORT_ENV_TIMEOUT" }} {{ env.Getenv "WALLARM_CRON_EXPORT_ENV_COMMAND" }}
 # sync-ip-lists
-{{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_TIMEOUT" }} /opt/wallarm/ruby/usr/share/wallarm-common/sync-ip-lists -l STDOUT
+{{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_TIMEOUT" }} {{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_COMMAND" }}
 # sync-ip-lists-source
-{{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SOURCE_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SOURCE_TIMEOUT" }} /opt/wallarm/ruby/usr/share/wallarm-common/sync-ip-lists-source -l STDOUT
+{{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SOURCE_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SOURCE_TIMEOUT" }} {{ env.Getenv "WALLARM_CRON_SYNC_IP_LISTS_SOURCE_COMMAND" }}
 # export-metrics
-{{ env.Getenv "WALLARM_CRON_EXPORT_METRICS_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_EXPORT_METRICS_TIMEOUT" }} /opt/wallarm/ruby/usr/share/wallarm-common/export-metrics -l STDOUT
+{{ env.Getenv "WALLARM_CRON_EXPORT_METRICS_SCHEDULE" }} timeout {{ env.Getenv "WALLARM_CRON_EXPORT_METRICS_TIMEOUT" }} {{ env.Getenv "WALLARM_CRON_EXPORT_METRICS_COMMAND" }}
